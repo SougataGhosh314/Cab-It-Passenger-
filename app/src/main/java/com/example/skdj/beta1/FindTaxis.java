@@ -35,7 +35,7 @@ public class FindTaxis extends AsyncTask<URL, Void, String> {
     @Override
     protected String doInBackground(URL... urls) {
         try {
-            Map<String , String> map;
+           
             String response=null;
             Log.d("task", "In tasss");
             double lan= MainActivity.strtLan;
