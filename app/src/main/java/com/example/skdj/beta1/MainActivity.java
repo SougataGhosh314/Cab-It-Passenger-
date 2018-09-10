@@ -116,8 +116,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             strtLan = intent.getDoubleExtra("latitude", 0.0);
             strtLong = intent.getDoubleExtra("longitude", 0.0);
             Log.d("task", "got location");
-            /*if(internetStatus()== true)
-               new FindTaxis().execute(url);*/
             Log.d("Location", strtLan + "  " + strtLong);
         }
     };
@@ -200,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onDrawerStateChanged(int i) {
+                //To handle the drawer event
                 if(drawer.isDrawerOpen(GravityCompat.START)== false) {
                     Log.d("task", "on drwaer state changed");
                     actionButton.setVisibility(View.VISIBLE);
@@ -227,10 +226,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(this);
         EditText edt= (EditText)findViewById(R.id.place_autocomplete_search_input);
-        edt.setBackgroundColor(Color.argb(0xFF, 0xFF, 0xFF, 0xFF));
+        edt.setBackgroundColor(Color.argb(0xFF, 0xFF, 0xFF, 0xFF)); //Setting background color of search input
 
         try {
-            url = new URL(getResources().getString(R.string.getTaxis));
+            url = new URL(getResources().getString(R.string.getTaxis)); //String.xml folder contain the url for getTaxis
         }
         catch (MalformedURLException me)
         {
@@ -249,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 PGMaps();
             }
         };
-        //For mapFragment transction handling
+        //For mapFragment transaction handling
         itsMySupportMapFragment.itsMapViewCreatedListener = mapViewCreatedListener;
         FragmentTransaction transaction = this.getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.map, itsMySupportMapFragment);
@@ -264,9 +263,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 })
                 .setActionTextColor(getResources().getColor(android.R.color.holo_red_light ));
 
-        //Go button
-
-
+        //Go button code start
         ImageView icon = new ImageView(this);
         icon.setImageResource(R.mipmap.go_asset_round);
 
@@ -343,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .addSubActionView(button4, 300, 300)
                 .attachTo(actionButton)
                 .build();
-
+// Go button code end
     }
     //Timer Thread to show taxis in every 5 sec
     private Handler handler = new Handler();
@@ -351,7 +348,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void run() {
             Log.d("task", "In run");
-            new FindTaxis().execute(url);
+            if(internetStatus()== true)
+               new FindTaxis().execute(url);
             handler.postDelayed(this, 5000);
         }
     };
@@ -372,11 +370,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-map.setMyLocationEnabled(true);
+        map.setMyLocationEnabled(true);
         map.getUiSettings().setMyLocationButtonEnabled(false);// Hide default myLocation button
-        handler.postDelayed(runnable, 1000);
+        //Starting the timer to get the get taxis from the server after every 5 sec
+        handler.postDelayed(runnable, 5000);
     }
-    //To show source and destination together in the map
+    //To show source and destination together in the map after the place selection in Searchplace Fragment
     private void showLocations() {
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(new LatLng(strtLan, strtLong));
@@ -523,16 +522,14 @@ map.setMyLocationEnabled(true);
     // Method to be executed after getting all the taxis from server
     public static void gotTaxis(String s) {
         map.clear();
-        LatLngBounds.Builder builder1 = new LatLngBounds.Builder();
-        builder1.include(new LatLng(strtLan, strtLong));
-        s= s.substring(s.indexOf('['), s.indexOf(']')+1);
+        s= s.substring(s.indexOf('['), s.indexOf(']')+1); //Get json array as String by extracting substring
         try {
             JSONArray jsonArray= new JSONArray(s);
+            //Looping through all the jsonObject in the Array
             for(int i=0;i<jsonArray.length();i++)
             {
                 JSONObject jsonObject= jsonArray.getJSONObject(i);
-                if(jsonObject.getInt("type")!=0)
-                   builder1.include(new LatLng(jsonObject.getDouble("lat"), jsonObject.getDouble("lon")));
+                // Adding marker for each of the vechicle type with different color
                 if(jsonObject.getInt("type")== 1) {
                     map.addMarker(new MarkerOptions().position(new LatLng(jsonObject.getDouble("lat"), jsonObject.getDouble("lon"))).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
                 }
@@ -548,14 +545,10 @@ map.setMyLocationEnabled(true);
                 else if(jsonObject.getInt("type")== 5) {
                     map.addMarker(new MarkerOptions().position(new LatLng(jsonObject.getDouble("lat"), jsonObject.getDouble("lon"))).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));
                 }
-                if(jsonObject.getInt("type")== 6) {
+                else if(jsonObject.getInt("type")== 6) {
                     map.addMarker(new MarkerOptions().position(new LatLng(jsonObject.getDouble("lat"), jsonObject.getDouble("lon"))).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
                 }
             }
-            /*LatLngBounds bounds= builder1.build();
-            int padding =100;
-            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);*/
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
