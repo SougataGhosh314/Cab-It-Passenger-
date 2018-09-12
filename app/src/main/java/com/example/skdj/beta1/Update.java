@@ -84,7 +84,7 @@ public class Update extends AppCompatActivity{
                     URL url = new URL("http://51.15.38.26/cgi-bin/Pune/DriverRegister/DriverRegister.out"); // here is your URL path
 
 
-                    String tosend="XYZ";
+                    String tosend="XYZABC";
                     tosend=tosend.replace(" ", "+");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setReadTimeout(15000 /* milliseconds */);
