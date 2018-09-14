@@ -23,6 +23,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -57,6 +58,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu;
@@ -103,10 +105,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Snackbar snackbar;
     SharedPreferences prefs;
     FloatingActionMenu actionMenu;
-    FloatingActionButton actionButton;
+    FloatingActionButton actionButton,actionButton1;
+    private ViewPager mViewPager;
+    private CardPagerAdapter mCardAdapter;
+    private ShadowTransformer mCardShadowTransformer;
     View view1,view2,view3,view4;
+    SubActionButton button1=null,button2=null,button3=null,button4=null;
     String MY_PREFS_NAME = "Start";
     double dest_latitude;
+    String destinationName;
     URL url;
     double dest_longitude;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -125,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
       //  Toast.makeText(this, place.getName(), Toast.LENGTH_LONG).show();
         dest_latitude= place.getLatLng().latitude;
         dest_longitude= place.getLatLng().longitude;
+        destinationName=place.getName().toString();
         showLocations();
     }
 
@@ -264,83 +272,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .setActionTextColor(getResources().getColor(android.R.color.holo_red_light ));
 
         //Go button code start
-        ImageView icon = new ImageView(this);
-        icon.setImageResource(R.mipmap.go_asset_round);
-
-        actionButton = new FloatingActionButton.Builder(this)
-                .setContentView(icon)
-                .build();
-
-        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) actionButton.getLayoutParams();
-        lp.gravity = Gravity.CENTER;
-        actionButton.setPosition(5, lp);
-        actionButton.setBackgroundColor(Color.argb(0x00, 0x00, 0x00, 0x00));
-        SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
-
-//Image Resources
-        ImageView itemIcon1 = new ImageView(this);
-        itemIcon1.setImageResource(R.mipmap.auto_vehicle_round);
-
-        ImageView itemIcon2 = new ImageView(this);
-        itemIcon2.setImageResource(R.mipmap.mini_vehicle_round);
-
-        ImageView itemIcon3 = new ImageView(this);
-        itemIcon3.setImageResource(R.mipmap.sedan_vehicle_round);
-
-        ImageView itemIcon4 = new ImageView(this);
-        itemIcon4.setImageResource(R.mipmap.suv_vehicle_round);
-
-//Button 1
-        view1 = getLayoutInflater().inflate(R.layout.sub_menu_button1, null);
-        ImageView img1 = view1.findViewById(R.id.subActionImage);
-        TextView txt1 = view1.findViewById(R.id.subActionLabel);
-        txt1.setText("Auto");
-        txt1.getBackground();
-        img1.setImageResource(R.mipmap.auto_vehicle_round);
-
-//Button 2
-        view2 = getLayoutInflater().inflate(R.layout.sub_menu_button2, null);
-        ImageView img2 = view2.findViewById(R.id.subActionImage);
-        TextView txt2 = view2.findViewById(R.id.subActionLabel);
-        txt2.setText("Mini");
-        img2.setImageResource(R.mipmap.mini_vehicle_round);
-
-//Button 3
-        view3 = getLayoutInflater().inflate(R.layout.sub_menu_button3, null);
-        ImageView img3 = view3.findViewById(R.id.subActionImage);
-        TextView txt3 = view3.findViewById(R.id.subActionLabel);
-        txt3.setText("Sedan");
-        img3.setImageResource(R.mipmap.sedan_vehicle_round);
-
-//Button 4
-        view4 = getLayoutInflater().inflate(R.layout.sub_menu_button4, null);
-        ImageView img4 = view4.findViewById(R.id.subActionImage);
-        TextView txt4 = view4.findViewById(R.id.subActionLabel);
-        txt4.setText("SUV");
-        img4.setImageResource(R.mipmap.suv_vehicle_round);
-
-        SubActionButton button1 = itemBuilder.setContentView(view1).build();
-        SubActionButton button2 = itemBuilder.setContentView(view2).build();
-        SubActionButton button3 = itemBuilder.setContentView(view3).build();
-//SubActionButton button4 = itemBuilder.setContentView(itemIcon4).build();
-        SubActionButton button4 = itemBuilder.setContentView(view4).build();
-
-        button1.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
-        button2.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
-        button3.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
-        button4.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
-
-//Floating Action Menu
-        actionMenu = new FloatingActionMenu.Builder(this)
-                .setStartAngle(180)
-                .setEndAngle(360)
-                .addSubActionView(button1, 300, 300)
-                .addSubActionView(button2, 300, 300)
-                .addSubActionView(button3, 300, 300)
-                .addSubActionView(button4, 300, 300)
-                .attachTo(actionButton)
-                .build();
+         ShowGoAction();
 // Go button code end
+
+
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("Clicked", "button1 clicked");
+                FetchVehicle();
+            }
+        });
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FetchVehicle();
+            }
+        });
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FetchVehicle();
+            }
+        });
+        button4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FetchVehicle();
+            }
+        });
     }
     //Timer Thread to show taxis in every 5 sec
     private Handler handler = new Handler();
@@ -581,5 +541,139 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
            snackbar.show();
            return false;
         }
+    }
+    public void ShowGoAction()
+    {
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.mipmap.go_asset_round);
+
+        actionButton = new FloatingActionButton.Builder(this)
+                .setContentView(icon)
+                .build();
+
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) actionButton.getLayoutParams();
+        lp.gravity = Gravity.CENTER;
+        actionButton.setPosition(5, lp);
+        actionButton.setBackgroundColor(Color.argb(0x00, 0x00, 0x00, 0x00));
+        SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
+
+//Image Resources
+        ImageView itemIcon1 = new ImageView(this);
+        itemIcon1.setImageResource(R.mipmap.auto_vehicle_round);
+
+        ImageView itemIcon2 = new ImageView(this);
+        itemIcon2.setImageResource(R.mipmap.mini_vehicle_round);
+
+        ImageView itemIcon3 = new ImageView(this);
+        itemIcon3.setImageResource(R.mipmap.sedan_vehicle_round);
+
+        ImageView itemIcon4 = new ImageView(this);
+        itemIcon4.setImageResource(R.mipmap.suv_vehicle_round);
+
+//Button 1
+        view1 = getLayoutInflater().inflate(R.layout.sub_menu_button1, null);
+        ImageView img1 = view1.findViewById(R.id.subActionImage);
+        TextView txt1 = view1.findViewById(R.id.subActionLabel);
+        txt1.setText("Auto");
+        txt1.getBackground();
+        img1.setImageResource(R.mipmap.auto_vehicle_round);
+
+//Button 2
+        view2 = getLayoutInflater().inflate(R.layout.sub_menu_button2, null);
+        ImageView img2 = view2.findViewById(R.id.subActionImage);
+        TextView txt2 = view2.findViewById(R.id.subActionLabel);
+        txt2.setText("Mini");
+        img2.setImageResource(R.mipmap.mini_vehicle_round);
+
+//Button 3
+        view3 = getLayoutInflater().inflate(R.layout.sub_menu_button3, null);
+        ImageView img3 = view3.findViewById(R.id.subActionImage);
+        TextView txt3 = view3.findViewById(R.id.subActionLabel);
+        txt3.setText("Sedan");
+        img3.setImageResource(R.mipmap.sedan_vehicle_round);
+
+//Button 4
+        view4 = getLayoutInflater().inflate(R.layout.sub_menu_button4, null);
+        ImageView img4 = view4.findViewById(R.id.subActionImage);
+        TextView txt4 = view4.findViewById(R.id.subActionLabel);
+        txt4.setText("SUV");
+        img4.setImageResource(R.mipmap.suv_vehicle_round);
+
+        button1 = itemBuilder.setContentView(view1).build();
+        button2 = itemBuilder.setContentView(view2).build();
+        button3 = itemBuilder.setContentView(view3).build();
+//SubActionButton button4 = itemBuilder.setContentView(itemIcon4).build();
+        button4 = itemBuilder.setContentView(view4).build();
+
+        button1.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
+        button2.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
+        button3.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
+        button4.setBackgroundColor(Color.argb(0x00, 0x33, 0x99, 0xFF));
+
+//Floating Action Menu
+        actionMenu = new FloatingActionMenu.Builder(this)
+                .setStartAngle(180)
+                .setEndAngle(360)
+                .addSubActionView(button1, 300, 300)
+                .addSubActionView(button2, 300, 300)
+                .addSubActionView(button3, 300, 300)
+                .addSubActionView(button4, 300, 300)
+                .attachTo(actionButton)
+                .build();
+    }
+    public void FetchVehicle()
+    {
+        if(destinationName==null)
+        {
+            Toast.makeText(getApplicationContext(), "Please select destination", Toast.LENGTH_LONG).show();
+            return;
+        }
+        actionButton.setVisibility(View.INVISIBLE);
+        actionButton.setEnabled(false);
+        button1.setVisibility(View.INVISIBLE);
+        button1.setEnabled(false);
+        button2.setVisibility(View.INVISIBLE);
+        button2.setEnabled(false);
+        button3.setVisibility(View.INVISIBLE);
+        button3.setEnabled(false);
+        button4.setVisibility(View.INVISIBLE);
+        button4.setEnabled(false);
+        ImageView icon = new ImageView(MainActivity.this);
+        icon.setImageResource(R.drawable.ic_action_cancelgo);
+
+        actionButton1 = new FloatingActionButton.Builder(MainActivity.this)
+                .setContentView(icon)
+                .build();
+
+
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) actionButton1.getLayoutParams();
+        lp.gravity = Gravity.CENTER;
+        actionButton1.setPosition(5, lp);
+
+        actionButton1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mViewPager.removeAllViews();
+                actionButton1.setVisibility(View.INVISIBLE);
+                actionButton1.setEnabled(false);
+                ShowGoAction();
+            }
+        });
+
+        mViewPager = (ViewPager) findViewById(R.id.viewPager);
+        mCardAdapter = new CardPagerAdapter();
+        mCardAdapter.addCardItem(new CardItem("Auto","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 5000Rs"));
+        mCardAdapter.addCardItem(new CardItem("Bike","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 1000Rs"));
+        mCardAdapter.addCardItem(new CardItem("Pink Car","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 2000Rs"));
+        mCardAdapter.addCardItem(new CardItem("Sedan","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 3000Rs"));
+
+        mCardShadowTransformer = new ShadowTransformer(mViewPager, mCardAdapter);
+
+        mViewPager.setAdapter(mCardAdapter);
+        mViewPager.setPageTransformer(true, mCardShadowTransformer);
+        mViewPager.setOffscreenPageLimit(3);
+        mViewPager.setAdapter(mCardAdapter);
+        mCardShadowTransformer.enableScaling(true);
+
     }
 }
