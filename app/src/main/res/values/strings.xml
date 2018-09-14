@@ -2,6 +2,7 @@
     <string name="app_name">beta1</string>
     <string name="emergency_api">AIzaSyAWrYKrU-iFWgy8ThA1K0YRFy7ERUJ38yA</string>
     <string name="getTaxis">http://192.168.43.29/cgi-bin/Pune/GetTaxisInRange/GetTaxisInRange.out</string>
+    <string name="createContract">http://192.168.43.29/cgi-bin/Pune/CreateContract/CreateContract.out</string>
     <string name="api_key">AIzaSyDPuv30D0vjB-rHbtftccPLSa1Rx6k1-8g</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

@@ -5,12 +5,16 @@ import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
+
+    Button cabconfirm;
 
     private List<CardView> mViews;
     private List<CardItem> mData;
@@ -52,6 +56,7 @@ public class CardPagerAdapter extends PagerAdapter implements CardAdapter {
         container.addView(view);
         bind(mData.get(position), view);
         CardView cardView = (CardView) view.findViewById(R.id.cardView);
+
 
         if (mBaseElevation == 0) {
             mBaseElevation = cardView.getCardElevation();

@@ -28,6 +28,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -35,6 +36,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -71,6 +73,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -110,18 +113,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ImageView icon;
     static ViewGroup parent;
     private ViewPager mViewPager;
+    View v;
     private CardPagerAdapter mCardAdapter;
     private ShadowTransformer mCardShadowTransformer;
     View view1,view2,view3,view4;
 
     SubActionButton button1=null,button2=null,button3=null,button4=null;
     String MY_PREFS_NAME = "Start";
-    double dest_latitude;
+    static double dest_latitude;
     boolean closeAdapter= false;
     boolean isOpened= false;
     String destinationName;
-    URL url;
-    double dest_longitude;
+    URL url,url2;
+    static double dest_longitude;
+    Button cabconfirm;
+    static  String phno;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -241,9 +247,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         autocompleteFragment.setOnPlaceSelectedListener(this);
         EditText edt= (EditText)findViewById(R.id.place_autocomplete_search_input);
         edt.setBackgroundColor(Color.argb(0xFF, 0xFF, 0xFF, 0xFF)); //Setting background color of search input
-
+        v=findViewById(R.id.viewPager);
         try {
             url = new URL(getResources().getString(R.string.getTaxis)); //String.xml folder contain the url for getTaxis
+            url2 = new URL(getResources().getString(R.string.createContract)); //String.xml folder contain the url for create contract
         }
         catch (MalformedURLException me)
         {
@@ -277,6 +284,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 })
                 .setActionTextColor(getResources().getColor(android.R.color.holo_red_light ));
 
+
+
+
+
         //Go button code start
          ShowGoAction();
 // Go button code end
@@ -286,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 if(closeAdapter== true)
                 {
-
+                    isOpened=true;
                     View namebar = findViewById(R.id.viewPager);
                     parent = (ViewGroup) namebar.getParent();
                     if (parent != null) {
@@ -298,7 +309,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 else
                 {
-                    actionMenu.open(true);
+                    if(actionMenu.isOpen()==false)
+                       actionMenu.open(true);
+                    else
+                        actionMenu.close(true);
                 }
             }
         });
@@ -307,41 +321,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View view) {
                 actionMenu.close(true);
                 Log.d("Clicked", "button1 clicked");
-                FetchVehicle();
-                icon.setImageResource(R.drawable.ic_action_cancelgo);
-                closeAdapter= true;
+                FetchVehicle(0);
             }
         });
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FetchVehicle();
                 actionMenu.close(true);
                 Log.d("Clicked", "button1 clicked");
-                FetchVehicle();
-                closeAdapter= true;
+                FetchVehicle(1);
 
             }
         });
         button3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FetchVehicle();
                 actionMenu.close(true);
                 Log.d("Clicked", "button1 clicked");
-                FetchVehicle();
-                closeAdapter= true;
+                FetchVehicle(2);
 
             }
         });
         button4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FetchVehicle();
+
                 actionMenu.close(true);
                 Log.d("Clicked", "button1 clicked");
-                FetchVehicle();
-                closeAdapter= true;
+                FetchVehicle(3);
             }
         });
     }
@@ -525,7 +532,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Method to be executed after getting all the taxis from server
     public static void gotTaxis(String s) {
         map.clear();
-        s= s.substring(s.indexOf('['), s.indexOf(']')+1); //Get json array as String by extracting substring
+        try {
+            s = s.substring(s.indexOf('['), s.indexOf(']') + 1); //Get json array as String by extracting substring
+        }
+        catch (Exception e)
+        {
+
+        }
         try {
             JSONArray jsonArray= new JSONArray(s);
             //Looping through all the jsonObject in the Array
@@ -664,18 +677,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .attachTo(actionButton)
                 .build();
     }
-    public void FetchVehicle()
+    public void FetchVehicle(int n)
     {
         if(destinationName==null)
         {
             Toast.makeText(getApplicationContext(), "Please select destination", Toast.LENGTH_LONG).show();
+            actionMenu.close(true);
             return;
         }
-        icon.setImageResource(R.drawable.ic_action_cancelgo);
         if(isOpened==true)
         {
-            parent.addView(findViewById(R.id.viewPager));
+
+            parent.addView(v);
         }
+        actionMenu.close(true);
+        icon.setImageResource(R.drawable.ic_action_cancelgo);
         mViewPager = (ViewPager) findViewById(R.id.viewPager);
         mCardAdapter = new CardPagerAdapter();
         mCardAdapter.addCardItem(new CardItem("Auto","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 5000Rs"));
@@ -689,7 +705,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mViewPager.setPageTransformer(true, mCardShadowTransformer);
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setAdapter(mCardAdapter);
+        mViewPager.animate();
+        mViewPager.setCurrentItem(n);
         mCardShadowTransformer.enableScaling(true);
+        closeAdapter=true;
 
+    }
+    //Function to handle on Click of confirm button
+    public void cabconf(View v)
+    {
+        phno = prefs.getString("phoneno",null);
+        new CreateContract().execute(url2);
+        Toast.makeText(getApplicationContext(),"cab confirmed",Toast.LENGTH_LONG).show();
     }
 }
