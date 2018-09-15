@@ -12,15 +12,24 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.example.skdj.beta1.MainActivity.dest_latitude;
 import static com.example.skdj.beta1.MainActivity.dest_longitude;
+import static com.example.skdj.beta1.MainActivity.durationSeconds;
+import static com.example.skdj.beta1.MainActivity.epochseconds;
+import static com.example.skdj.beta1.MainActivity.fare;
+import static com.example.skdj.beta1.MainActivity.fareFinal;
 import static com.example.skdj.beta1.MainActivity.phno;
 import static com.example.skdj.beta1.MainActivity.strtLan;
 import static com.example.skdj.beta1.MainActivity.strtLong;
+import static com.example.skdj.beta1.MainActivity.sum;
+import static com.example.skdj.beta1.MainActivity.vhtype;
 
 public class CreateContract  extends AsyncTask<URL, Void, String> {
 
@@ -47,6 +56,13 @@ public class CreateContract  extends AsyncTask<URL, Void, String> {
             Double clon = strtLong;
             Double dlat = dest_latitude;
             Double dlon = dest_longitude;
+            Float estdistance = sum;
+            int esttime=durationSeconds;
+
+            String estfare=fareFinal;
+
+            long starttime=epochseconds;
+            int vhctype= vhtype;
             URL url = urls[0]; // here is your URL path
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -56,7 +72,8 @@ public class CreateContract  extends AsyncTask<URL, Void, String> {
             conn.setDoInput(true);
             conn.setDoOutput(true);
             //  Toast.makeText(getApplicationContext(),restoredText,Toast.LENGTH_LONG).show();
-            String s="phoneNumber="+phno1+"&lat0="+clat+"&lon0="+clon+"&lat1="+dlat+"&lon1="+dlon+"&starttime="+"123";
+            Log.d("EST", estfare);
+            String s="phoneNumber="+phno1+"&lat0="+clat+"&lon0="+clon+"&lat1="+dlat+"&lon1="+dlon+"&starttime="+starttime+"&type="+vhctype+"&eMeter="+estdistance+"&eTime="+esttime+"&eFare="+estfare;
             OutputStream os = conn.getOutputStream();
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(os, "UTF-8"));

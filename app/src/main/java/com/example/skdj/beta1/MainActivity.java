@@ -1,6 +1,7 @@
 package com.example.skdj.beta1;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.BroadcastReceiver;
@@ -61,6 +62,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
@@ -83,8 +85,16 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.TimerTask;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -93,10 +103,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public static final String fl = Manifest.permission.ACCESS_FINE_LOCATION;
     public static final String cl = Manifest.permission.ACCESS_COARSE_LOCATION;
+    private static final int LOCATION_REQUEST = 500;
     private static final int per_req_code = 1234;
     private static GoogleMap map;
     private boolean mLocationPermissionGranted;
     MySupportMapFragment itsMySupportMapFragment;
+    String[] fareArray = new String[7];
     private static final float DfZoom = 15f;
     private FusedLocationProviderClient mFusedLocation;
     Window window;
@@ -114,6 +126,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static ViewGroup parent;
     private ViewPager mViewPager;
     View v;
+    static float fare;
+    static String fareFinal;
+    float timeHours;
+    static int TimeHours, TimeMinutes, durationSeconds;
     private CardPagerAdapter mCardAdapter;
     private ShadowTransformer mCardShadowTransformer;
     View view1,view2,view3,view4;
@@ -124,10 +140,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     boolean closeAdapter= false;
     boolean isOpened= false;
     String destinationName;
+    static Float sum;
     URL url,url2;
     static double dest_longitude;
     Button cabconfirm;
+    static int vhtype;
     static  String phno;
+    static long epochseconds;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -395,6 +414,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         map.animateCamera(cu);
         map.addMarker(new MarkerOptions().position(new LatLng(dest_latitude, dest_longitude)));
+        /////////////////// added by Sougata
+
+        LatLng origin = new LatLng(strtLan, strtLong);
+        LatLng dest = new LatLng(dest_latitude, dest_longitude);
+        String url = getRequestUrl(origin, dest);
+        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+        taskRequestDirections.execute(url);
+        /////////////////
+        //To show route and fare
+
+
     }
     //Taking googlemap object ref
     public void PGMaps() {
@@ -532,6 +562,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Method to be executed after getting all the taxis from server
     public static void gotTaxis(String s) {
         map.clear();
+
         try {
             s = s.substring(s.indexOf('['), s.indexOf(']') + 1); //Get json array as String by extracting substring
         }
@@ -694,10 +725,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         icon.setImageResource(R.drawable.ic_action_cancelgo);
         mViewPager = (ViewPager) findViewById(R.id.viewPager);
         mCardAdapter = new CardPagerAdapter();
-        mCardAdapter.addCardItem(new CardItem("Auto","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 5000Rs"));
-        mCardAdapter.addCardItem(new CardItem("Bike","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 1000Rs"));
-        mCardAdapter.addCardItem(new CardItem("Pink Car","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 2000Rs"));
-        mCardAdapter.addCardItem(new CardItem("Sedan","From: Army Institute of technology\nTo: "+destinationName+"\n Price: 3000Rs"));
+
+        fareArray[2] = String.format("%.2f", (fare*1.33));
+        fareArray[1] = String.format("%.2f", (fare*1.2));
+        fareArray[4] = String.format("%.2f", (fare*1.15));
+        fareArray[5] = String.format("%.2f", (fare*1.55));
+        mCardAdapter.addCardItem(new CardItem("Auto","From: Army Institute of technology\nTo: "+destinationName+"\n Price: Rs. " + fareArray[2]));
+        mCardAdapter.addCardItem(new CardItem("Bike","From: Army Institute of technology\nTo: "+destinationName+"\n Price: Rs. " + fareArray[1]));
+        mCardAdapter.addCardItem(new CardItem("Pink Car","From: Army Institute of technology\nTo: "+destinationName+"\n Price: Rs. " + fareArray[4]));
+        mCardAdapter.addCardItem(new CardItem("Sedan","From: Army Institute of technology\nTo: "+destinationName+"\n Price: Rs. " + fareArray[5]));
 
         mCardShadowTransformer = new ShadowTransformer(mViewPager, mCardAdapter);
 
@@ -714,8 +750,193 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //Function to handle on Click of confirm button
     public void cabconf(View v)
     {
+
+        long millis= System.currentTimeMillis();
+        epochseconds=millis/1000;
+        int n=mViewPager.getCurrentItem();
+        switch (n)
+        {
+            case 0: vhtype=2;
+                    fareFinal = fareArray[2];
+                    break;
+            case 1: vhtype=1;
+                    fareFinal = fareArray[1];
+                    break;
+            case 2: vhtype=4;
+                    fareFinal = fareArray[4];
+                    break;
+            case 3: vhtype=5;
+                    fareFinal = fareArray[5];
+                    break;
+        }
         phno = prefs.getString("phoneno",null);
         new CreateContract().execute(url2);
         Toast.makeText(getApplicationContext(),"cab confirmed",Toast.LENGTH_LONG).show();
+
+
+    }
+
+    //added by Sougata ////////////////////////////
+
+    private String getRequestUrl(LatLng origin, LatLng dest) {
+        String str_org = "origin=" + origin.latitude + "," + origin.longitude;
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+        String sensor = "sensor=false";
+        String mode = "mode=driving";
+        String param =str_org + "&" + str_dest + "&" + sensor + "&" + mode;
+        String output = "json";
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
+        return url;
+    }
+
+    private String requestDirection(String reqUrl) throws IOException {
+        String responseString = "";
+        InputStream inputStream = null;
+        HttpURLConnection httpURLConnection = null;
+        try {
+            URL url = new URL(reqUrl);
+            httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.connect();
+
+            //getting response result
+            inputStream = httpURLConnection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            StringBuffer stringBuffer = new StringBuffer();
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null){
+                stringBuffer.append(line);
+            }
+
+            responseString = stringBuffer.toString();
+            bufferedReader.close();
+            inputStream.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if(inputStream != null){
+                inputStream.close();
+            }
+            httpURLConnection.disconnect();
+        }
+        return responseString;
+    }
+/*
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case LOCATION_REQUEST:
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    map.setMyLocationEnabled(true);
+                }
+                break;
+        }
+    }
+    */
+
+    public class TaskRequestDirections extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String responseString = "";
+            try{
+                responseString = requestDirection(strings[0]);
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+            return responseString;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            //parsing json here
+            TaskParser taskParser = new TaskParser();
+            taskParser.execute(s);
+        }
+    }
+
+    public class TaskParser extends AsyncTask<String, Void, List<List<HashMap<String, String>>> >{
+
+        @Override
+        protected List<List<HashMap<String, String>>> doInBackground(String... strings) {
+            JSONObject jsonObject = null;
+            List<List<HashMap<String, String>>> routes = null;
+            try{
+                jsonObject = new JSONObject(strings[0]);
+                DirectionsParser directionsParser = new DirectionsParser();
+                routes = directionsParser.parse(jsonObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<HashMap<String, String>>> lists) {
+            //getting route list and displaying it on the map
+            ArrayList points = null;
+            PolylineOptions polylineOptions =null;
+
+            for(List<HashMap<String, String>>path : lists) {
+                points = new ArrayList();
+                polylineOptions = new PolylineOptions();
+
+                for(HashMap<String, String>point : path) {
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lon = Double.parseDouble(point.get("lon"));
+
+                    points.add(new LatLng(lat, lon));
+                }
+
+                polylineOptions.addAll(points);
+                polylineOptions.width(15);
+                polylineOptions.color(Color.BLUE);
+                polylineOptions.geodesic(true);
+            }
+
+            if(polylineOptions != null){
+                map.addPolyline(polylineOptions);
+
+                // getting distance
+                List<LatLng> latlangs = polylineOptions.getPoints();
+                int size = latlangs.size() - 1;
+                float[] results = new float[1];
+                sum=0.0f;
+                for(int i = 0; i < size; i++){
+                    Location.distanceBetween(
+                            latlangs.get(i).latitude,
+                            latlangs.get(i).longitude,
+                            latlangs.get(i+1).latitude,
+                            latlangs.get(i+1).longitude,
+                            results);
+                    sum += results[0];
+                }
+                sum = sum/1000;
+                timeHours = sum/25;
+
+                TimeHours = (int) (Math.floor(timeHours));
+                TimeMinutes = (int) ((timeHours-Math.floor(timeHours))*60);
+                durationSeconds = TimeHours*3600 + TimeMinutes *60;
+
+                String distance = Float.toString(sum);
+                Toast.makeText(getApplicationContext(), "Distance (in km): " + distance, Toast.LENGTH_SHORT).show();
+                fare = 0;
+                if(sum <= 4){
+                    fare += 40;
+                } else {
+                    fare = 40 + (sum-4)*8;
+                }
+                String fareString = Float.toString(fare);
+                Toast.makeText(getApplicationContext(), "Fare (in INR): " + fareString, Toast.LENGTH_SHORT).show();
+                //
+
+            } else {
+                Toast.makeText(getApplicationContext(), "Route not found!!!", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
