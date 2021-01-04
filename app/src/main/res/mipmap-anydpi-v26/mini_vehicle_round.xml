@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/mini_vehicle_background"/>
-    <foreground android:drawable="@mipmap/mini_vehicle_foreground"/>
-</adaptive-icon>
